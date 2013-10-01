@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>backbone todo</title>
+<style type="text/css">
+*{margin: 0;padding: 0;}
+a{text-decoration: none;}
+.none{display: none;}
+.fr{background: #fff;width: 20px;height: 20px;border-radius: 10px;float: right;font-size: 20px;text-align: center;line-height: 20px;
+	-webkit-transform:rotate(-45deg);
+	-webkit-transition:all 0.5s;
+}
+.fr:hover{
+	-webkit-transform:rotate(135deg);
+}
+h1{text-align: center;margin: 10px 0;}
+form{width: 400px;margin: 100px auto 20px;}
+[type=text],a,#total,#viewer{font: bold 18px "Microsoft Yahei","Arial";}
+[type=text]{width: 380px;height:30px;border-radius: 5px;outline: 0;padding: 10px;}
+::-webkit-input-placeholder{font-style:italic;}
+ul,li{list-style: none;margin: 3px auto;}
+li{width: 390px;padding: 10px 5px;
+	border-radius: 6px;overflow: hidden;
+	-webkit-transition:background 0.5s;
+	-moz-transition:background 0.5s;
+	transition:background 0.5s;
+}
+li:hover{background: #ccc;}
+li:hover .none,label{display: block;}
+[type=checkbox]{float: left;margin: 5px;}
+p{float: left;width: 340px;word-wrap:break-word;}
+.del{text-decoration: line-through;}
+
+#total,#viewer{width: 400px;margin:10px auto;}
+#total span{color:red;}
+#checkall{margin:3px 5px 0  10px;}
+</style>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/underscore.js"></script>
+<script type="text/javascript" src="js/backbone.js"></script>
+</head>
+<body>
+<form action="" id="form">
+	<h1>Todo模拟训练</h1>
+	<input type="text" class="text" autofocus placeholder="input new task" />
+</form>
+<div id="viewer" class="none">
+	<label>
+		<input type="checkbox" id="checkall" />
+		Mark all tasks as done.
+	</label>
+</div>
+<div id="list"></div>
+<div id="total" class="none">
+	there are <span class="total"></span> todos in the list.<span class="undone"></span> undone.
+</div>
+<script type="text/template" id="template">
+	<a href="javascript:;" class="fr none">+</a>
+	<input type="checkbox" />
+	<p><%= title %></p>
+</script>
+<script type="text/javascript">
+var App = {
+	view : {},
+	model : {},
+	collection : {},
+	helper : {}
+};
+
+//	template
+App.helper.template = function(id){
+	return _.template($('#' + id).html());
+};
+
+//	model
+App.model.li = Backbone.Model.extend();
+
+// ul view
+App.view.ul = Backbone.View.extend({
+	initialize : function(){
+		this.collection.on('add', this.addOne, this);
+	},
+	tagName : 'ul',
+	render : function(){
+		this.collection.each(this.addOne, this);
+		return this;
+	},
+	addOne :function(model){
+		var newli = new App.view.li({model : model});
+		this.$el.append(newli.render().el);
+	}
+});
+
+// li view
+App.view.li = Backbone.View.extend({
+	initialize: function(){
+		this.model.on('destroy', this.remove, this);
+		this.model.on('done', this.done, this);
+		this.model.on('undone', this.undone, this);
+	},
+	tagName : 'li',
+	events : {
+		'click input' : 'check',
+		'click a' : 'destroy'
+	},
+	check : function(){
+		this.$('[type=checkbox]').prop('checked') && this.model.trigger('done') || this.model.trigger('undone');
+	},
+	done : function(){
+		this.$('[type=checkbox]').prop('checked',true);
+		this.$('p').addClass('del');
+	},
+	undone : function(bool){
+		this.$('[type=checkbox]').prop('checked',false);
+		this.$('p').removeClass('del');
+	},
+	destroy : function(){
+		this.model.destroy();
+	},
+	remove : function(){
+		this.$el.remove();
+	},
+	template : App.helper.template('template'),
+	render : function(){
+		this.$el.html(this.template(this.model.toJSON()));
+		return this;
+	}
+});
+
+//	form view
+App.view.formview = Backbone.View.extend({
+	el : '#form',
+	events : {
+		'submit' : 'submit'
+	},
+	submit : function(e){
+		e.preventDefault();
+		var title = this.$('input').val();
+		if($.trim(title)){
+			var newmodel = new App.model.li({title : title});
+			this.collection.add(newmodel);
+		}
+		this.el.reset();
+	}
+});
+
+App.view.viewer = Backbone.View.extend({
+	el : '#viewer',
+	initialize : function(){
+		this.checkbox = this.$('input');
+		this.collection.on('add', this.show, this);
+		this.collection.on('remove', this.hide, this);
+	},
+	show : function(){
+		this.collection.length === 1 && this.$el.show();
+	},
+	hide : function(){
+		!this.collection.length && this.$el.hide() && this.checkbox.prop('checked', false);
+	},
+	events : {
+		'click input' : 'checkall'
+	},
+	off : function(){
+		this.checkbox.prop('checked', false);
+	},
+	checkall : function(){
+		this.collection.each(this.markOne, this);
+	},
+	markOne: function(model){
+		this.checkbox.prop('checked') && model.trigger('done') || model.trigger('undone');
+	}
+});
+
+App.view.total = Backbone.View.extend({
+	el : '#total',
+	initialize : function(){
+		this.collection.on('add', this.show, this);
+		this.collection.on('remove', this.hide, this);
+	},
+	show : function(){
+		this.collection.length === 1 && this.$el.show();
+		this.$('.total').html(list.length);
+	},
+	hide : function(){
+		!this.collection.length && this.$el.hide();
+	}
+})
+
+//	collection
+App.collection.list = Backbone.Collection.extend();
+var list = new App.collection.list();
+var viewer = new App.view.viewer({collection: list});
+var total = new App.view.total({collection: list});
+var ul = new App.view.ul({collection : list});
+var formview = new App.view.formview({collection : list});
+$('#list').append(ul.render().el);
+
+</script>
+</body>
+</html>

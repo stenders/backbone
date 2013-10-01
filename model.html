@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Backbone Demo</title>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/underscore.js"></script>
+<script type="text/javascript" src="js/backbone.js"></script>
+</head>
+<body align="center">
+<h1>Backbone Model Demo</h1>
+<script type="text/javascript">
+function log(val){
+	console.log(val);
+}
+function warn(val){
+	console.warn(val);
+}
+// constructor codes
+var Book = Backbone.Model.extend({
+	initialize : function(){
+		log('ok, we have created a new instance of Book!');
+	},
+	urlRoot : '/htmlhub',
+	defaults : {
+		name : 'jQuery',
+		author : 'Resig',
+		date : 1996,
+		version : '1.0',
+		div : '<div class="book">A couple of DIV tags.</div>'
+	},
+	idAttribute : 'not-an-id',
+	validate : function(val){
+		if(typeof val.date !== 'number')
+			return 'date type should be a number!';
+		if(val.date <= 1996)
+			return 'date given is invalid!';
+	}
+});
+
+var book = new Book({
+	'not-an-id' : 'this-is-my-id'
+});
+
+book.on('error', function(model, response){
+	log('Error : ' + response);
+});
+
+book.on('change:date', function(model, val){
+	warn('has the date been changed ? ' + model.hasChanged('date'));
+	var prev = model.previous('date');
+	warn('Warning : the date has been changed from ' + prev + ' to ' + val + '! and the previous attributes of book is as follows:');
+	log(model.previousAttributes());
+});
+book.on('change:version', function(model, val){
+	warn('has the version been changed ? ' + model.hasChanged('version'));
+	warn('Warning : the latest version of jQuery has been updated to v' + val);
+});
+
+
+//execution codes
+log('TIPS : the book we have created is just like this:');
+log(book.toJSON());
+
+log('TIPS : check the validate function:');
+book.set({
+	date : '123'
+});
+book.set({
+	date : 1995
+});
+
+log('TIPS : then we start to call each attributes on book!');
+log('the cid of book is : ' + book.cid);
+log('has book have an real id ? ' + !book.isNew() + '.and the id of book is ' + '\"' + book.id + '\"');
+log('then we check the change methods we have bound on book:');
+
+book.set({
+	date : 2011,
+	version : '1.7.0'
+});
+
+log('let us change the attribute without warning.')
+book.set({version : '1.8.0'},{silent : true});
+log('now the current version of jQuery is v' + book.get('version'));
+log('has book have the author of jQuery ? ' + book.has('author'));
+book.unset('author',{silent : true});
+log('when we remove the author attribute, has book have the author of jQuery now ? ' + book.has('author'));
+log('we check the div attribute of the book :' + book.get('div'));
+log('once more : ' + book.escape('div'));
+log('the url of book is ' + book.url());
+log('we remove the change mothod bound on version attribute and only keep the change method on date :');
+book.off('change:version');
+book.set({
+	date : 2012,
+	version : '1.8.2'
+});
+log('now the version of jQuery has been updated to v' + book.get('version') + '. and the last modified date is ' + book.get('date'));
+log('then we try to use book.save() and we get this:');
+
+Backbone.sync = function(method, model) {
+  log('the method is : ' + method + ". and book in json is : " + JSON.stringify(model));
+};
+book.save({
+	reader : 'chunhang'
+});
+log('we also get another attribute through save method : reader:' + book.get('reader'));
+log('finally we destroy the book instance but it doesn\'t work:');
+book.destroy({
+	success : function(model, response){
+		alert('destroyed!');
+	},
+	error : function(model, response){
+		alert('failure!');
+	}
+});
+log('TIPS : then we clear all the attributes in book instance.');
+book.clear({silent: true});
+log('so is the book empty now ? ' + _.isEmpty(book.attributes));
+
+</script>
+</body>
+</html>

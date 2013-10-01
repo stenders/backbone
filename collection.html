@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Backbone Demo</title>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/underscore.js"></script>
+<script type="text/javascript" src="js/backbone.js"></script>
+<style type="text/css">
+::selection{
+    background:#3252B4;
+    color:#D6239D;
+}
+</style>
+</head>
+<body align="center">
+<h1>Backbone Collection Demo</h1>
+<script type="text/javascript">
+function log(val){
+	console.log(val);
+}
+function warn(val){
+	console.warn(val);
+}
+// constructor codes
+var Book = Backbone.Model.extend();
+var Ship = Backbone.Collection.extend({
+	model : Book,
+	initialize : function(){
+		log('TIPS : ok, we have created an instance of Collection Ship!');
+	},
+	url : '/htmlhub_git'
+});
+var ship = new Ship;
+ship.on('add', function(model, collection){
+	warn('Warning : another model named ' + model.get('name') + ' has been added with the age ' + model.get('age'));
+});
+
+//execution codes
+log('TIPS : add 3 models with different age to the collection ship.');
+ship.add([
+	{name : 'luck', age : 12},
+	{name : 'lucy', age : 11},
+	{name : 'lily', age : 10},
+	{name : 'tomy', age : 12}
+]);
+log('the original sequence we added is: ' + ship.pluck('name'));
+log('TIPS : add a comparator function to collection ship and call ship.sort():');
+ship.comparator = function(model){
+	return model.get('age');
+};
+ship.sort();
+log('now the sequence of models is : ' + ship.pluck('name') + '!');
+log('and the length of ship is ' + ship.length);
+log('TIPS : we use a list of methods similar with Array: shift & pop');
+var lily = ship.shift();
+var tomy = ship.pop();
+log('and the length of ship is ' + ship.length);
+log('TIPS : push & unshift:');
+ship.push(lily);
+ship.unshift(tomy);
+log('and the length of ship is ' + ship.length);
+log('the sequence now is: ' + ship.pluck('name'));
+log('TIPS : the comparator has automatically sorted the models when changed.');
+log('find the model that has the cid whose attribute is c0 :');
+log(ship.getByCid('c0'));
+log('but the 0 index model is :');
+log(ship.at(0));
+log('TIPS : find out the models\'s names that aged 12 :');
+var age = ship.where({age : 12});
+var tmp = _.map(age, function(model){
+	return model.get('name');
+});
+log(tmp);
+log('TIPS : remove model named tomy:');
+ship.remove(tomy);
+log('now the length of models is ' + ship.length + ', and the names are ' + ship.pluck('name'));
+
+Backbone.sync = function(method, model){
+	log('sync running with the method :' + method + ', and the url of model is ' + model.url);
+};
+log('TIPS : fetch from the server and trigger the sync method:');
+ship.fetch({add: true});
+log('TIPS : replace all the models attributes in ship with a new one by reset:');
+ship.reset({
+	name : 'Jimy' , age : 18
+});
+log('TIPS : now the models in collection ship is :');
+log(ship.models);
+ship.reset();
+log('TIPS : clear all the attributes in collection ship so we get:');
+log(ship.models);
+
+log('TIPS : add a new model to collection ship by create():');
+Backbone.sync = function(){};
+ship.create({
+	name : 'Resig', age : 20
+});
+log('now the only model in ship is :');
+log(ship.models[0]);
+
+</script>
+</body>
+</html>

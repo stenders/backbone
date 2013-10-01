@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Backbone Demo</title>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/underscore.js"></script>
+<script type="text/javascript" src="js/backbone.js"></script>
+<style type="text/css">
+
+#demo{
+	width:200px;
+	min-height:100px;
+	margin:0 auto;
+	border:1px solid #ccc;
+}
+::selection{
+    background:#3252B4;
+    color:#D6239D;
+}
+button{
+	font-size:18px;
+	font-weight:700;
+	padding:0.5em 1.5em;
+	border-radius:8px;
+	box-shadow:4px 4px 10px rgba(0,0,0,0.5);
+	text-shadow:2px 2px 10px rgba(0,0,0,0.5);
+	border:none;
+	color:#fff;
+	background-image:-webkit-linear-gradient(top,#08c, #04c);
+	display:none;
+}
+button:hover{
+	background-image:-webkit-linear-gradient(top,#06c, #05c);
+}
+button:active{
+	background-image:-webkit-linear-gradient(top,#04c, #08c);
+}
+</style>
+</head>
+<body align="center">
+<h1>Backbone View Demo</h1>
+<div id="demo"></div>
+<span id="test"></span>
+
+<script type="text/javascript">
+function log(str){
+	console.log(str);
+}
+function warn(str){
+	console.warn(str);
+}
+// constructor codes
+var ItemView = Backbone.View.extend({
+	el : $('#demo'),
+	tagName : 'i',
+	attributes : {
+		aaa : '111'
+	},
+	events : {
+		'click button' : 'appendItem'
+	},
+	initialize : function(){
+		log.tmp = this;
+		console.log('ok, we have created an instance of ItemView.');
+		setTimeout(function(){
+			log.tmp.render();
+		}, 2000);
+	},
+	render : function(){
+		this.counter = 0;
+		$('<button>click</button>').appendTo(this.el).slideDown('slow');
+	},
+	appendItem : function(){
+		this.counter ++;
+		var html = '<p>' + this.counter + ': new paragraph added.</p>';
+		this.$el.append(html);
+	}
+});
+
+var view = new ItemView;
+var el = view.make('i', {'class' : 'bold'}, 'bold and italic text!');
+$('#test').append(el);
+
+</script>
+</body>
+</html>
