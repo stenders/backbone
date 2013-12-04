@@ -12,14 +12,9 @@ var template = function(id){
 
 
 App.Models.Task = Backbone.Model.extend({
-  initialize: function(){
-    this.on('invalid', function(model, error, options){
-      console.log(options)
-    })
-  },
   validate: function(attrs){
     if(! $.trim(attrs.title)){
-      return 'invalide input'
+      return 'invalid input'
     }
   }
 })
