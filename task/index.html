@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Backbone task</title>
+  <style type="text/css">
+  body,input{
+    font: 1.5em "Microsoft Yahei";
+  }
+  </style>
+  <script type="text/javascript" src="../js/jquery.js"></script>
+  <script type="text/javascript" src="../js/underscore.js"></script>
+  <script type="text/javascript" src="../js/backbone.js"></script>
+</head>
+<body>
+  <h1>My Tasks</h1>
+
+  <form action="" id="addTask">
+    <input type="text" placeholder="your new task here.">
+    <input type="submit" value="add task">
+  </form>
+
+  <div class="task">
+
+    <script type="text/template" id="taskTemplate">
+      <span><%= title %></span>
+      <button class="edit">Edit</button>
+      <button class="delete">Delete</button>
+    </script>
+
+  </div>
+
+
+  <script type="text/javascript" src="main.js"></script>
+</body>
+</html>
