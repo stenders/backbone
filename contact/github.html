@@ -1,0 +1,66 @@
+# 使用Backbone.js创建通讯录：Part 1
+
+> 原文地址：http://code.tutsplus.com/tutorials/build-a-contacts-manager-using-backbonejs-part-1--net-24277
+
+这个教程里将使用Backbone.js，Underscore.js，jQuery来创建一个功能完整的通讯录。我们将会目睹Backbone的基本组成部分和Underscore提供的一些非常方便的方法。
+
+## 这些库都是什么东东？
+Backbone是一个能让人们使用MVC模式轻松创建大型JavaScript应用的体系性框架。Backbone并不被认为是真正的MVC-因为"C"指的是集合(Collection)而并不是控制器(Controller)，但是它还是提供了许多有用的东西来让我们编写强大而且可维护的代码。
+
+Underscore是一个实用函数的工具库，它提供了JavaScript很多增强的功能，添加了很多针对数组、集合、函数和对象的补充功能。
+
+jQuery肯定就不用我再介绍了。
+
+## 入门
+
+先一起创建一个根目录，里面创建三个子文件夹分别是css，img和js。先从下面这个HTML页面开始：
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Backbone.js Web App</title>
+  <link rel="stylesheet" href="css/screen.css" />
+</head>
+<body>
+  <div id="contacts"></div>
+  <script src="js/jquery-1.7.1.min.js"></script>
+  <script src="js/Underscore-min.js"></script>
+  <script src="js/Backbone-min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+```
+在根目录里命名为```index.html```。Backbone唯一必须依赖的是Underscore.js，但我们也想用到jQuery，所以把这两个库放在Backbone的前面。应用程序的代码要写进```app.js```，样式写进```screen.css```。页面里还放了个空标签作为容器，这些组成了页面的基本结构。
+
+下面创建这个系列教程的主要的js文件。在一个新文件里放进下面的代码段：
+<script type="text/javascript">
+(function ($) {
+var contacts = [
+  { name: "Contact 1", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "family" },
+  { name: "Contact 2", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "family" },
+  { name: "Contact 3", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "friend" },
+  { name: "Contact 4", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "colleague" },
+  { name: "Contact 5", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "family" },
+  { name: "Contact 6", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "colleague" },
+  { name: "Contact 7", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "friend" },
+  { name: "Contact 8", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "family" }
+];
+}(jQuery))
+</script>
+将文件保存为```app.js```。将代码放进立即执行的匿名函数内，传递了jQuery参数并用$来代替。还定义了一个由对象组成的数组，它里面的每一个对象都代表了一个联系人信息。
+
+在本教程里，我们将使用这个本地数据，它可以使我们不必担心跟服务器打交道，以后再说保存数据的事儿。
+
+## 模型
+
+模型代表的是应用程序的数据；具体到本程序中，一个模型应该是一个单独的联系人信息，它包含了联系人姓名，联系电话等属性。可以说一个单独的模型代表了一个应用程序功能的最小单位。在数组后面加上这些代码：
+<script type="text/javascript">
+var Contact = Backbone.Model.extend({
+  defaults: {
+    photo: "placeholder.jpg"
+  }
+})
+</script>
+
+

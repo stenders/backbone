@@ -1,0 +1,27 @@
+@charset "utf-8";
+*{
+  margin: 0;
+  padding: 0;
+}
+body{
+  font: 12px "Arial";
+}
+article{
+  display: inline-block;
+  margin: 5px;
+  width: 300px;
+  background: #ccc;
+  padding: 5px;
+  border: 1px solid #444;
+}
+img{
+  float: left;
+  margin-right: 5px;
+}
+article h1{
+  font-size: 80%;
+}
+h1 span{
+  float: right;
+  font-weight: normal;
+}
