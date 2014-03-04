@@ -6,7 +6,7 @@
 
 ## 这些库都是什么东东？
 
-Backbone是一个能让人们使用MVC模式轻松创建大型JavaScript应用的体系性框架。Backbone并不被认为是真正的MVC-因为"C"指的是集合(Collection)而并不是控制器(Controller)，但是它还是提供了许多有用的东西来让我们编写强大而且可维护的代码。
+Backbone是一个能让人们使用MVC模式轻松创建大型JavaScript应用的体系性框架。Backbone并不被认为是真正的MVC-因为"C"指的是集合(Collection)而并不是控制器(Controller)，但是它还是提供了许多有用的东西来让我们编写强大且可维护的代码。
 
 Underscore是一个实用函数的工具库，它提供了JavaScript很多增强的功能，添加了很多针对数组、集合、函数和对象的补充功能。
 
@@ -32,10 +32,10 @@ jQuery肯定就用不着再介绍了。
 </body>
 </html>
 ```
-在根目录里命名为```index.html```。Backbone唯一必须依赖的是Underscore.js，但我们也想用到jQuery，所以把这两个库放在Backbone的前面。应用程序的代码要写进```app.js```，样式写进```screen.css```。页面里还放了个空标签作为容器，这些组成了页面的基本结构。
+将这个页面在根目录里命名为```index.html```。Backbone唯一必须依赖的是Underscore.js，但我们也想用到jQuery，所以把这两个库放在Backbone的前面。应用程序的代码要写进```app.js```，样式写进```screen.css```。页面里还放了个空标签作为容器，这些组成了页面的基本结构。
 
 下面创建这个系列教程的主要的js文件。在一个新文件里放进下面的代码：
-<script type="text/javascript">
+```javascript
 (function ($) {
 var contacts = [
   { name: "Contact 1", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "family" },
@@ -48,22 +48,22 @@ var contacts = [
   { name: "Contact 8", address: "1, a street, a town, a city, AB12 3CD", tel: "0123456789", email: "anemail@me.com", type: "family" }
 ];
 }(jQuery))
-</script>
+```
 将文件保存为```app.js```。将代码放进立即执行的匿名函数内，传递了jQuery参数并用$来代替。还定义了一个由对象组成的数组，它里面的每一个对象都代表了一个联系人信息。
 
 在本教程里，我们将使用这个本地数据，它可以使我们不必担心跟服务器打交道，以后再说保存数据的事儿。
 
 ## 模型
 
-模型代表的是应用程序的数据；具体到本程序中，一个模型应该是一个单独的联系人信息，它包含了姓名，电话等属性。可以说一个单独的模型是一个应用程序功能的最小单位。在数组后面加上这些代码：
-<script type="text/javascript">
+模型代表的是应用程序的数据；具体到本程序中，一个模型应是一个单独的联系人信息，它包含了姓名，电话等属性。可以说一个单独的模型是一个应用程序功能的最小单位。在数组后面加上这些代码：
+```javascript
 var Contact = Backbone.Model.extend({
   defaults: {
     photo: "/img/placeholder.png"
   }
 })
-</script>
-用```extend()```方法扩展```Backbone.Model```这个类就可以生成一个模型，可以这个方法传递一个包含了我们自定义属性的对象。其中一个属性叫做```defaults```，这个属性设置了我们所有模型的默认值。
+```
+用```extend()```方法扩展```Backbone.Model```这个类就可以生成一个模型，可以给这个方法传递一个包含了我们自定义属性的对象。其中一个属性叫做```defaults```，这个属性设置了我们所有模型的默认值。
 
 这里，我们给所有模型实例的```photo```属性设置了一个占位图像作为默认值，任何模型在生成时如果没有提供此属性值，将以此作为默认值。
 
@@ -72,17 +72,17 @@ var Contact = Backbone.Model.extend({
 ## 集合
 
 集合是用来管理一组模型的类。这里使用一个非常简单的集合来存储所有联系人。在```Contact```模型后面添加以下代码：
-<script type="text/javascript">
+```javascript
 var Directory = Backbone.Collection.extend({
   model: Contact
 });
-</script>
+```
 同模型一样，一个集合也是由我们根据应用程序需要可提供自定义功能的Backbone的类。集合也有一个```extend()```方法，接收一个由我们设置属性和添加功能的对象。可以使用```model```属性来告诉集合中的每个模型应该属于哪个类，这里就是```Contact```模型的一个实例。我们现在定义的类很简单但不用担心，接下来的教程会给他们添加更多的功能。
 
 ## 视图
 
 视图负责在HTML页面里展示应用程序的数据。应用程序中将处理数据的部分与展示数据的部分分离开的好处之一是，我们能轻松的去修改某个，而不用大量的修改另一个。在我们的应用程序中会用到很多视图，下面在```Directory```后面先添加第一个视图：
-<script type="text/javascript">
+```javascript
 var ContactView = Backbone.View.extend({
   tagName: 'article',
   className: 'contact-container',
@@ -95,17 +95,17 @@ var ContactView = Backbone.View.extend({
     return this
   }
 })
-</script>
+```
 
-这个视图负责展示一个单独的联系人。同模型和集合一样，视图也有```extend()```方法来扩展```Backbone.View```这个类。在视图中我们设置了几个实例属性；```tagName```属性用来设置视图的容器标签，```className```属性用来给这个容器标签添加类名。还有在HTML页面里一个简单的模版，```template```属性存储了一个指向此模版的引用，这里使用的jQuery从页面中来选取。
+这个视图负责展示一个单独的联系人。同模型和集合一样，视图也有```extend()```方法来扩展```Backbone.View```这个类。在视图中我们设置了几个实例属性；```tagName```属性用来设置视图的容器标签，```className```属性用来给这个容器标签添加类名。还有在HTML页面里一个简单的模版，```template```属性存储了一个指向此模版的引用，这里使用的jQuery从页面中来选取它。
 
 接下来定义了```render()```方法，它没有被Backbone自动执行，但也可以在自动执行的```initialize()```方法里执行它从而让这个视图来自动渲染，但是我们这里还不需要。
 
 在```render()```方法里缓存了Underscore的```template()```方法的引用并给它传递了存储的模版作为参数。当只传递一个包含了模版的参数时，Underscore不会马上执行它而是返回一个方法，以备以后执行并渲染模版。
 
-然后使用jQuery的```html()```简便方法设置了由视图生成的```<article>```节点的HTML内容。这是由调用Underscore刚才返回的模版函数同时传递了数据用来插值渲染。数据是由给模型调用Backbone的```toJSON()```方法来得到的。插值渲染就是说占位的变量由真实数据来替换。同时注意我们是使用的```$el```来设置的HTML内容；这是当前节点缓存的一个jQuery版本的自身对象，因此就不必再去生成一个新的jQuery对象了。
+然后使用jQuery的```html()```这个简便方法设置了由视图生成的```<article>```节点的HTML内容。这是由调用Underscore刚才返回的模版函数并同时传递了数据用来做插值渲染。数据是对模型调用Backbone的```toJSON()```方法来得到的。插值渲染就是说占位的变量由真实数据来替换。同时注意我们是使用的```$el```来设置的HTML内容；这是当前节点缓存的一个jQuery版本的自身对象，因此就不必再去生成一个新的jQuery对象了。
 
-在```render()```方法最后，返回了```this```这个对象，它指向的是```render()```方法正在执行着的当前视图的实例。因此在执行```render()```方法之后可以链式调用其他的Backbone方法。
+在```render()```方法最后，返回了```this```这个对象，它指向的是```render()```方法正在执行的当前视图的实例。因此在执行```render()```方法之后可以链式调用其他的Backbone方法。
 
 
 ## Underscore微模版
@@ -122,12 +122,12 @@ var ContactView = Backbone.View.extend({
   </dl>
 </script>
 ```
-我们使用了一个带有```id```属性的```<script>```标签因此能快速选择到它，```</script>```标签还使用了自定义的```type```属性因此浏览器不会试着去执行里面的代码。在模版内，明确了我们希望的HTML结构，并用```<%= model_property_name %>```占位符来说明模型的数据在哪里插入。Underscore另外还有很多功能，但在本教程里我们不会涉及到。
+我们使用了一个带有```id```属性的```<script>```标签因此能快速选择到它，```</script>```标签还使用了自定义的```type```属性因此浏览器不会试着去执行里面的代码。在模版内，明确了我们希望的HTML结构，并用```<%= model_property_name %>```占位符来说明模型的数据在哪里插入。Underscore另外还有很多功能，但在本教程里我们不会涉及到那么多。
 
 ## Master视图
 
 下面接着创建另外一个视图。我们现有的视图代表的是每个单独的联系人信息，它跟我们的模型的比例是1:1的关系。但是这个视图还不能自行渲染而且也没被调用过。我们现在所需要的是一个能跟我们的集合1:1关系的视图，一个能渲染正确数量的联系人模型并显示每个联系人信息的master视图。在```ContactView```后面添加下面代码：
-<script type="text/javascript">
+```javascript
 var DirectoryView = Backbone.View.extend({
   el: $('#contacts'),
 
@@ -150,5 +150,30 @@ var DirectoryView = Backbone.View.extend({
     this.$el.append(contactView.render().el)
   }
 })
-</script>
-这个视图将绑定到页面上现有的节点上，也就是硬编码到```<body>```标签里的这个空容器。我们用jQuery选择到它后将它设置为```el```属性。
+```
+这个视图将绑定到页面上现有的节点上，也就是硬编码到```<body>```标签里的这个空容器。我们用jQuery选择到它后将它设置为```el```属性。接着定义了一个```initialize()```方法，在里面生成了集合这个类的一个实例，最后又执行了这个视图的```render()```方法以便让它能够自动渲染。
+
+下面就定义了master视图的```render()```方法。在这个方法里，缓存了master视图的一个引用，回调函数里需要使用这个引用。调用了Underscore的```each()```方法来遍历集合中的每一个模型。
+
+这个方法接受两个参数(尽管我们可以只传递一个参数)；第一个是要遍历的项的集合，第二个是要对每个项要执行的匿名回调函数。回调函数将当前的每个项做为参数。在回调函数内我们唯一做的就是调用```renderContact()```方法并传递当前项。
+
+最后定义了```renderContact()```方法。这个方法里，生成了```ContactView```这个类的一个新实例(要记得，```ContactView```这个类代表的是一个单独的联系人信息)并将接受到的项作为新实例的```model```属性。接着把这个由执行了新实例的```render()```方法生成的节点添加到master视图```DirectoryView```(之前从页面上选取的空容器)的```$el```属性上。```$el```属性是Backbone自动生成的一个缓存的jQuery对象。
+
+master视图负责生成集合里的每个单独的视图。我们需要做的只是初始化一个master视图，而且由于它可以自动渲染，它将展示虚拟数据数组里的所有联系人信息。
+```javascript
+var directory = new DirectoryView()
+```
+
+现在在浏览器里运行后，就应该能看到我们数据已经可视化了。
+
+img
+
+我们原先的数组里的每一个模型都被Backbone生成了一个实例，这些模型都存储在一个集合的实例中，他们又被当做视图的实例被渲染。
+
+本教程不是关于CSS的，我就没有提到这个例子的CSS样式，都是些很基本的样式，如果感兴趣的话可以去看demo里的样式表。
+
+## 总结
+
+教程的这个部分我们已经介绍了Backbone.js的一些核心内容：模型、集合和视图。模型是我们为了针对某件事情存储数据和添加行为而生成的类。集合是用来管理一组模型的，视图则是可以借助模版来渲染模型，并展示模型里的数据。
+
+下节会介绍怎样对集合进行过滤只展示一部分模型数据，还会谈谈Backbone的另一个主要内容——路由。
