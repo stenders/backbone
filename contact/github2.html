@@ -2,9 +2,9 @@
 
 > 原文地址：http://code.tutsplus.com/tutorials/build-a-contacts-manager-using-backbonejs-part-2--net-24315
 
-在part 1里谈到了Backbone模型、集合和视图的基本用法和怎样使用绑定了集合的master视图渲染单独的联系人视图。
+在part 1里谈到了Backbone模型、集合和视图的基本用法和怎样使用绑定了集合的master视图渲染单个的联系人视图。
 
-这次来看下如何根据用户输入来显示特定的视图，和怎样添加一个路由，让应用程序能响应一些URL功能。
+这次来看下如何根据用户输入来显示特定的视图，和怎样添加一个路由，让应用程序能响应一些URL地址的功能。
 
 我们需要在part 1的基础上进行，如果没有读过part 1，强烈建议先[读一下](http://stenders.github.io/posts/build-contact-manager-with-backbone.html)。
 
@@ -22,7 +22,7 @@
   </div>
 </header>
 ```
-就这些！一个```<header>```元素作为容器，里面又是一个带有```id```属性的容器，再往里是一个```<label>```和介绍文字。
+就这些！一个```<header>```元素作为容器，里面又是一个带有```id```属性的过滤容器，再往里是一个```<label>```和介绍文字。
 
 下面来创建```<select>```元素。首先往```DirectoryView```的master视图里增加两个方法；第一个是提取特定的类型，第二个来创建一个下拉菜单。两个方法应放在视图最下面。
 <script type="text/javascript">
@@ -49,4 +49,79 @@ createSelect: function () {
 </script>
 第一个方法里，```getTypes()```返回一个由Underscore的```uniq()```方法生成的数组。```uniq()```方法接受一个数组作为参数并返回一个只包含唯一元素的新数组。传到```uniq()```方法里的数组是由Backbone的```pluck()```方法生成的。```pluck()```方法是将视图集合中某一类型的视图提取出来的一个简单方法。这里我们感兴趣的类型是```type```属性。
 
-为了防止出现大小写问题，这里统一将类型小写处理。在```uniq()```方法里，还提供了一个遍历方法作为第三个参数，它用来将所有的type属性转为小写，它接受当前项作为参数，在函数体内直接返回了其小写格式。```uniq()```方法里传递的第二个参数```false```是用来指明待处理的数组是否已经过排序。
+为了防止出现大小写问题，这里统一将类型小写处理。在```uniq()```方法里，提供了一个遍历方法作为第三个参数，它用来将所有的type属性转为小写，它接受当前项作为参数，在函数体内则可以直接返回了其小写格式。```uniq()```方法里传递的第二个参数```false```是用来指明待处理的数组是否已经过排序。
+
+第二个方法```createSelect()```代码多了一些，但也不复杂，它唯一的功能就是创建并返回一个```<slect>```元素。因此我们能在代码的另一个地方能执行这个方法，而且能返回一个闪亮的包含了所有类型选项的下拉框。开始的时候，就先给下拉框一个值为```All```的```<option>```元素。
+
+接着又使用了Underscore的```each()```方法来遍历```getTypes()```方法返回的数组中的每个值。对于数组中的每个值，都创建一个新的```<option>```元素，设置了当前项的文本内容和值之后，再将它添加到```<select>```里面。
+
+真正要将```<select>```元素渲染到页面上，还需要往master视图的```initialize()```方法里添加下面的代码：
+<script type="text/javascript">
+this.$el.find('#filter').append(this.createSelect())
+</script>
+master视图的容器被缓存到了```$el```属性里，这个属性是Backbone自动添加到视图里的。所以用它来找到上面新添加的过滤容器后，再将```<select>```元素添加到它里面。
+
+现在再运行页面后，就能看到一个新的```<select>```元素了，所有联系人的类型也都在里面。
+
+## 过滤视图
+
+现在可以给```<select>```元素添加过滤功能了。为了做到这一点，就用到了master视图的```events```属性来给UI添加事件处理。将下面的代码添加到```renderSelect()```方法下面：
+<script type="text/javascript">
+events: {
+  'change #filter select': 'setFilter'
+}
+</script>
+```events```属性接受一个键值对```key:value```对象，键值对里注明了事件的类型和要绑定事件的选择器。这里我们感兴趣的事件是在```#filter```容器里的```<select>```元素的```change```事件。键值对对象的属性值是要被绑定的事件处理函数。这里就是```setFilter```：
+<script type="text/javascript">
+setFilter: function(e){
+  this.filterType = e.currentTarget.value
+  this.trigger('change:filterType')
+}
+</script>
+在```setFilter()```方法里，给master视图设置了一个叫```fiterType```的属性，将它的值设置为了当前选中项的值，这个值是通过自动传递给事件函数的事件对象的```currentTarget```的属性获得的。
+
+一旦这个属性被添加或者更新之后，就可以触发一个自定义的```change```事件，使用了属性名作为命名空间。等下再来看怎么使用这个自定义事件，现在先添加一个真正处理过滤的函数；在```setFilter()```方法后面添加下面的代码：
+<script type="text/javascript">
+filterByType: function(){
+  if(this.filterType === 'all'){
+    this.collection.reset(contacts)
+  } else {
+    this.collection.reset(contacts, {silent: true})
+
+    var filterType = this.filterType,
+        filtered = _.filter(this.collection.models, function(item){
+          return item.get('type').toLowerCase() === filterType
+        })
+
+    this.collection.reset(filtered)
+  }
+}
+</script>
+
+先检查master视图的```filterType```属性是不是被设置为了```all```；如果是的话，就只需将```contacts```数组保存的所有模型重新装载到页面上。
+
+如果属性值不等于```all```，我们仍然需要将所有联系人模型重置，这个是必须步骤，因为要切换不同的类型的联系人，但是这次将```silent```选项设置为```true```（等下就能知道为什么这是必须的了），```reset```事件就不会被触发了。
+
+将master视图的```filterType```属性缓存到了本地变量里，这就能在回调函数里访问到它了。使用Underscore的```filter()```方法来过滤模型集合。```filter()```方法接受待过滤的数组和针对每个数组内的元素要执行的回调函数作为参数。回调函数接受数组的当前元素作为参数。
+
+数组的当前元素里如果其```type```属性与我们刚才缓存的变量相等的时候，回调函数就会返回```true```。跟上面提到的原因相同，```type```属性也被转换为了小写。回调函数返回```false```的元素会从数组里删除掉。
+
+数组被过滤之后，就可以再次执行下```reset()```方法并传递过滤后的数组做为参数。接下来就该添加一些代码将```setType()```、```filterType()```和```filterByType()```三个方法串联起来了。
+
+## 集合的事件绑定
+
+跟绑定UI事件使用了```events```属性一样，还可以给集合绑定事件。在```setFilter()```方法里触发了一个自定义事件，现在要把```filterByType()```方法绑定到这个事件上。在master视图的```initialize()```方法里添加下面的代码：
+<script type="text/javascript">
+this.on('change:filterType', this.filterByType, this)
+</script>
+
+使用Backbone的```on()```方法可以用来监听自定义事件。```on()```方法的第二个参数是给此自定义方法绑定的事件，也就是```filterByType()```方法，在第三个参数的位置设置了回调函数的上下文```this```，这里的```this```对象指代的就是master视图。
+
+在```filterByType```函数内部，我们对集合进行了重置，有时候用的是所有模型，也有时候是过滤后的模型。还可以绑定```reset```事件来根据模型的实例重载集合。可以给这个事件添加处理函数，好消息是，已经存在了这样的处理函数。在```change```事件绑定的代码后面添加如下代码：
+<script type="text/javascript">
+this.collection.on('reset', this.render, this)
+</script>
+
+这里，我们监听了```reset```事件，我们希望触发的函数是集合的```render()```方法。还指明了回调函数在执行时使用的上下文是```this```（master视图的一个实例）。如果没有提供```this```作为第三个参数，就不能在```render()```方法里处理```reset()```事件时引用集合了。
+
+此时，就应该能看到已经可以使用选择框来展示不同联系人了。
