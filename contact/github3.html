@@ -1,0 +1,159 @@
+# 使用Backbone.js创建通讯录：Part 3
+
+> 原文地址：http://code.tutsplus.com/tutorials/build-a-contacts-manager-using-backbonejs-part-3--net-24407
+
+欢迎来到Backbone系列的part 3！前面两部分见这里[part 1]()和[part 2]()。强烈建议先读完它们以便了解我们现在的进度。
+
+在part 1里谈到了模型、视图和集合。在part 2里谈了路由、事件和history模块。这次要进一步探讨交互和怎么从集合中添加和移除模型。
+
+## 给集合添加模型
+
+回想下part 1里我们是怎么在集合初始化时将模型添加到集合中的。但是在集合被初始化之后又怎么往其中添加模型呢？实际上这非常简单。
+
+在新联系人被添加到集合时，master视图要有自动更新的能力。将下面的代码放在联系人容器里：
+
+```
+<form id="addContact" action="#">
+  <label for="photo">photo:</label><input id="photo" type="file" />
+  <label for="type">Type:</label><input id="type" />
+  <label for="name">Name:</label><input id="name" />
+  <label for="address">Address:</label><input id="address" />
+  <label for="tel">Tel:</label><input id="tel" />
+  <label for="email">Email:</label><input id="email" />
+  <button id="add">Add</button>
+</form>
+```
+这个表单用来添加新联系人信息。很关键的一点是这里```<input>```元素的```id```属性跟模型里的属性名一致，这非常有利于获得我们所需要的数据格式。
+
+接下来，给master视图添加事件函数来获取表单里的数据；在```event```的键值对对象里添加如下代码：
+
+```
+  'click #add': 'addContact'
+```
+同时别忘记在需要逗号的地方添加逗号。这次是添加了点击```id```为```add```的元素时的响应事件，这个元素也就是表单的提交按钮。绑定的响应事件是下面就要添加的```addContact```。在```filterByType()```方法下面添加下面的代码：
+
+```
+  addContact: function (e) {
+    e.preventDefault();
+
+    var newModel = {};
+    $("#addContact").children("input").each(function (i, el) {
+      if ($(el).val() !== "") {
+        newModel[el.id] = $(el).val();
+      }
+    });
+
+    contacts.push(formData);
+
+    if (_.indexOf(this.getTypes(), formData.type) === -1) {
+      this.collection.add(new Contact(formData));
+      this.$el.find("#filter").find("select").remove().end().append(this.createSelect()); 
+    } else {
+      this.collection.add(new Contact(formData));
+    }
+  }
+```
+
+这个事件会自动接受一个```event```对象，它可以用来在```button```元素被点击时来取消事件的默认行为（就是提交表单并重载页面，这不是我们想要的）。然后创建了一个新的空对象，并使用jQuery的```each()```方法来遍历```addContact```表单里的每个```input```元素。
+
+在```each()```方法里传递的回调里，首先检查该```input```框里有没有输入内容，如果有内容，会用其```id```作为键值，其```value```作为属性值组成键值对。如果没有输入过内容就会按照默认值生成一个新模型。
+
+接着，会用新联系人信息来更新数据库，这里要跟服务器打交道，我们现在还没做服务器，因此就只更新下最初使用的数据数组。当数据被过滤后还能保持新数据不会丢失。下面要做的就是使用集合的```add()```方法来往集合添加数据。在调用add方法给集合添加模型可以同时在方法里创建新模型。
+
+最后，如果新联系人信息包含有新的过滤类型的话，还需要更新下```select```元素。不过，我们只想在新类型被添加时重载下```select```元素。可以使用Underscore的```indexOf()```方法在数组里寻找特定值。跟js里的字符串```indexOf()```方法一样，它在没找到该值时会返回```-1```。```indexOf()```方法接受的第一个参数是要寻找的数组，第二个参数是要查找的值。
+
+如果数组中没有找到该值，则该类型一定是新类型，因此在使用```createSelect()```方法生成新的下拉框之前要先移除掉现有的下拉框。如果找到了该值，则只需新增一个模型而不用重载该下拉框。
+
+## 渲染新模型
+
+现在已经将新模型添加到了集合中，需要将其显示在页面上。为了能做到这点，需要添加另一个方法，要监听```add```事件。在集合的```initialize()```方法里添加下面的代码：
+
+```
+  this.collection.on('add', this.renderContact, this)
+```
+跟现有的创建和显示一个单独视图的方法一样，这里又一次使用了```on()```方法来添加事件监听，我们只需提供事件处理函数。跟前面的事件处理函数一样，仍然在函数中传递了master视图作为```this```对象。到这里，我们应该可以完成这个表单了，新联系人也被渲染到了页面上。
+
+<img src="" alt="">
+
+要注意的一点是```addContact```表单如果全部输入域为空，生成的模型将是缺乏属性的，会给以后的操作造成麻烦。避免的方法就是为模型的大多数属性提供下默认值，就像给```photo```属性提供的一样。如果没有合适的默认值可用，比如联系人姓名，则直接提供空字符串。在```Contact```类的```default```对象里更新以下属性：
+
+```
+ name: '',
+ address: '',
+ tel: '',
+ email: '',
+ type: ''
+```
+
+## 从集合中删除模型
+
+现在知道了怎么添加模型，还要知道怎么来删除模型。这需要往每个联系人模型里添加一个删除按钮。第一步要更新联系人模版，往里面添加一个删除按钮：
+
+```
+<button class="delete">Delete</button>
+```
+
+本例子中就只需要这个按钮就够了。删除单独模型的逻辑可以添加到单独的模型的类中去。需要在当点击删除按钮的时候添加绑定事件和事件处理函数；在```ContactView```类的尾部添加下面的代码：
+
+```
+  events: {
+    "click button.delete": "deleteContact"
+  },
+   
+  deleteContact: function () {
+    var removedType = this.model.get("type").toLowerCase();
+ 
+    this.model.destroy();
+ 
+    this.remove();
+ 
+    if (_.indexOf(directory.getTypes(), removedType) === -1) {
+      directory.$el.find("#filter select").children("[value='" + removedType + "']").remove();
+    }
+  }
+```
+
+跟master视图里一样，仍然使用了```events```对象来绑定事件。这次是监听的带有```delete```类名的按钮的单击事件。绑定的事件处理函数是```deleteContact```，添加在了```events```对象后面。
+
+首先是保存了刚删除的联系人信息的类型。像之前那样需要先将其转化成小写形式来保证以后当联系人视图在使用时没有大小写问题。
+
+然后调用了当前模型实例```this```的```destory()```方法，然后调用了jQuery的```remove()```方法来移除HTML节点，这个方法还可以帮助清除当前视图上已绑定着的事件函数。
+
+最后获取了集合中的所有模型的类型值，检查数组中是否还存在刚才移除的联系人类型。如果没有该类型的联系人的话，还需要从下拉框中将对应的选项也删除掉。
+
+先是查找到了该下拉框，再用属性选择器来选择跟刚才保存的```removedType```变量相同值的```<option>```节点。如果删除了某类型的所有联系人的话，再检查```<select>```元素时就会发现该类型已经不在下拉框中了。
+
+<img src="" alt="">
+
+## 删除模型的数据
+
+得承认这个副标题有些迷惑。我的意思是不但删除模型和视图，我们还要从创建模型的联系人数组里删除原始数据。如果不删除，被删除的模型会在过滤时又回来了。在现实应用中，会跟服务器来同步来保持数据。
+
+从联系人数组中删除数据的功能可以放在master视图里。集合中有模型被删除时它会触发一个```remove```事件，因此可以在master视图里面简单的添加一个监听函数。在现有的绑定事件下面添加下面的代码：
+
+```
+this.collection.on("remove", this.removeContact, this);
+```
+你应该对这样的句子非常熟悉了，但是需要提醒你的是，```on()```方法的第一个参数是我们要监听的事件，第二个参数是当这个事件发生时要执行的事件函数，第三个是事件函数执行时要使用的上下文```this```。下面添加```removeContact()```方法；在```addContact()```方法后面添加下面的代码：
+
+```
+removeContact: function (removedModel) {
+    var removed = removedModel.attributes;
+	if (removed.photo === "/img/placeholder.png") {
+        delete removed.photo;
+    }
+    _.each(contacts, function (contact) {
+        if (_.isEqual(contact, removed)) {
+            contacts.splice(_.indexOf(contacts, contact), 1);
+        }
+    });
+}
+```
+
+
+
+
+
+
+
+
